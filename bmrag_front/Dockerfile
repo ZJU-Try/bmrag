@@ -1,18 +1,31 @@
+# ====== 构建阶段：Node 编译 React ======
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# 先复制 package.json，利用层缓存
+COPY package.json ./
+
+# 安装依赖
+RUN npm config set registry https://registry.npmmirror.com && npm install
+
+# 复制源码并构建
+COPY . .
+RUN npm run build
+
+# ====== 运行阶段：nginx 部署 ======
 FROM nginx:alpine
 
-# 清除默认配置和默认 server 块（否则会与我们的配置冲突抢占 80 端口）
+# 清除默认配置
 RUN rm -rf /usr/share/nginx/html/* /etc/nginx/conf.d/default.conf
 
-# 复制静态资源
-COPY index.html /usr/share/nginx/html/
-COPY css/ /usr/share/nginx/html/css/
-COPY js/ /usr/share/nginx/html/js/
+# 从 builder 复制构建产物
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# 复制 nginx 配置模板（nginx 官方镜像启动时自动用环境变量替换 ${VAR}）
+# 复制 nginx 配置模板
 COPY nginx.conf.template /etc/nginx/templates/nginx.conf.template
 
-# 默认后端地址：指向宿主机（前端单独跑时，宿主机用 python app.py 或 gunicorn 跑后端）
-# 联合部署时通过 -e BACKEND_URL=http://backend:5000 覆盖
+# 默认后端地址：指向宿主机
 ENV BACKEND_URL=http://host.docker.internal:5000
 
 EXPOSE 80

@@ -37,3 +37,7 @@ Thumbs.db
 
 # Docker
 *.tar
+
+# Node.js
+node_modules/
+dist/
