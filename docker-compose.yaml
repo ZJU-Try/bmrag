@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  # ====== 后端：Flask + gunicorn ======
+  backend:
+    build: ./bmrag_backend
+    image: bmrag-backend:latest
+    container_name: bmrag-backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./bmrag_backend/models:/app/models
+      - ./bmrag_backend/chroma_db:/app/chroma_db
+    env_file:
+      - ./bmrag_backend/.env
+    networks:
+      - bmrag-net
+    restart: unless-stopped
+
+  # ====== 前端：nginx ======
+  front:
+    build: ./bmrag_front
+    image: bmrag-front:latest
+    container_name: bmrag-front
+    ports:
+      - "8080:80"
+    environment:
+      - BACKEND_URL=http://backend:5000
+    depends_on:
+      - backend
+    networks:
+      - bmrag-net
+    restart: unless-stopped
+
+networks:
+  bmrag-net:
+    driver: bridge

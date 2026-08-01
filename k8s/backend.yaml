@@ -1,0 +1,110 @@
+# ====== Secret: DeepSeek API Key ======
+apiVersion: v1
+kind: Secret
+metadata:
+  name: bmrag-backend-secret
+  namespace: bmrag
+type: Opaque
+stringData:
+  DEEPSEEK_API_KEY: <your-deepseek-api-key>
+---
+# ====== PVC: 模型文件存储 ======
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bmrag-models-pvc
+  namespace: bmrag
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+# ====== PVC: 向量数据库存储 ======
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bmrag-chromadb-pvc
+  namespace: bmrag
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+# ====== Deployment: 后端 ======
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bmrag-backend
+  namespace: bmrag
+  labels:
+    app: bmrag-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bmrag-backend
+  template:
+    metadata:
+      labels:
+        app: bmrag-backend
+    spec:
+      containers:
+        - name: bmrag-backend
+          image: bmrag-backend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5000
+          envFrom:
+            - secretRef:
+                name: bmrag-backend-secret
+          volumeMounts:
+            - name: models
+              mountPath: /app/models
+            - name: chromadb
+              mountPath: /app/chroma_db
+          # 健康检查
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          # 资源限制（sentence-transformers 加载模型需要较多内存）
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: bmrag-models-pvc
+        - name: chromadb
+          persistentVolumeClaim:
+            claimName: bmrag-chromadb-pvc
+---
+# ====== Service: 后端 ======
+apiVersion: v1
+kind: Service
+metadata:
+  name: bmrag-backend
+  namespace: bmrag
+spec:
+  selector:
+    app: bmrag-backend
+  ports:
+    - port: 5000
+      targetPort: 5000
+      protocol: TCP

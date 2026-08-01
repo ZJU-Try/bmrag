@@ -1,0 +1,38 @@
+# ====== Ingress: 统一入口，路由分发前后端 ======
+# /api/*  -> bmrag-backend (rewrite 去掉 /api 前缀)
+# /*      -> bmrag-front
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bmrag-ingress
+  namespace: bmrag
+  annotations:
+    # 使用正则匹配路径
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    # /api/ask/stream -> /ask/stream (去掉 /api 前缀)
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    # ====== SSE 流式输出关键配置 ======
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          # /api/ 开头的请求转发到后端，去掉 /api 前缀
+          - path: /api(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: bmrag-backend
+                port:
+                  number: 5000
+          # 其他请求转发到前端
+          - path: /(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: bmrag-front
+                port:
+                  number: 80

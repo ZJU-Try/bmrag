@@ -1,0 +1,49 @@
+# ====== Deployment: 前端 ======
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bmrag-front
+  namespace: bmrag
+  labels:
+    app: bmrag-front
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bmrag-front
+  template:
+    metadata:
+      labels:
+        app: bmrag-front
+    spec:
+      containers:
+        - name: bmrag-front
+          image: bmrag-front:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          # 后端地址指向 K8s Service（同一 namespace 内可直接用 Service 名）
+          env:
+            - name: BACKEND_URL
+              value: "http://bmrag-backend:5000"
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+---
+# ====== Service: 前端 ======
+apiVersion: v1
+kind: Service
+metadata:
+  name: bmrag-front
+  namespace: bmrag
+spec:
+  selector:
+    app: bmrag-front
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP

@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+
+# 虚拟环境
+venv/
+.venv/
+env/
+
+# 大文件/数据目录（不纳入版本控制）
+bmrag_backend/models/
+bmrag_backend/chroma_db/
+
+# 环境变量（含 API Key，不提交）
+.env
+*.env
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+
+# 日志
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.tar

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>保密知识助手</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app">
+        <!-- 侧边栏：历史对话 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>保密知识助手</h1>
+                <button id="newChatBtn" class="btn-new-chat" title="新建对话">+ 新对话</button>
+            </div>
+            <div class="conversation-list" id="conversationList">
+                <!-- 历史对话列表动态渲染 -->
+            </div>
+            <div class="sidebar-footer">
+                <span class="badge">RAG 问答系统</span>
+            </div>
+        </aside>
+
+        <!-- 主对话区 -->
+        <main class="chat-area">
+            <div class="chat-header">
+                <span id="currentTitle">新对话</span>
+            </div>
+
+            <div class="messages" id="messages">
+                <!-- 欢迎语 -->
+                <div class="welcome" id="welcome">
+                    <div class="welcome-icon">🔒</div>
+                    <h2>欢迎使用保密知识助手</h2>
+                    <p>我可以为你解答保密相关的知识问题，请直接提问。</p>
+                    <div class="suggestions">
+                        <button class="suggestion-item" data-query="国家秘密的密级分为哪几级？">国家秘密的密级分为哪几级？</button>
+                        <button class="suggestion-item" data-query="个人隐私可以确定为国家秘密吗？">个人隐私可以确定为国家秘密吗？</button>
+                        <button class="suggestion-item" data-query="非密品是否需要作出秘密标识？">非密品是否需要作出秘密标识？</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <div class="input-wrapper">
+                    <textarea id="queryInput" placeholder="输入你的问题... (Enter 发送, Shift+Enter 换行)" rows="1"></textarea>
+                    <button id="sendBtn" class="btn-send" title="发送">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
