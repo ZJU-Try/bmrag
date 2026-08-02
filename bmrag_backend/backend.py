@@ -2,6 +2,8 @@ from typing import List, Generator
 import time
 import chromadb
 from sentence_transformers import CrossEncoder, SentenceTransformer
+from rank_bm25 import BM25Okapi
+import jieba
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -27,8 +29,49 @@ cross_encoder = CrossEncoder('./models/mmarco-mMiniLmv2-L12-H384-v1')
 chromadb_client = chromadb.PersistentClient(path="./chroma_db")
 chromadb_collection = chromadb_client.get_or_create_collection(name='default')
 
+# 6. 初始化 BM25 索引（从 ChromaDB 加载所有文档构建）
+_all_docs = chromadb_collection.get(include=['documents', 'metadatas'])
+_bm25_corpus = [list(jieba.cut(doc)) for doc in _all_docs['documents']]
+_bm25_doc_ids = [m.get('doc_id', -1) for m in _all_docs['metadatas']]
+_bm25 = BM25Okapi(_bm25_corpus) if _bm25_corpus else None
 
-# ==================== 核心功能函数 ====================
+
+# ==================== 查询改写 ====================
+
+def rewrite_query(query: str) -> str:
+    """
+    用 LLM 将用户问题改写为适合检索的关键词形式
+    提升：否定句、短查询、口语化问题的检索效果
+    
+    示例:
+        "哪些事项不得确定为国家秘密？" → "不得确定为国家秘密 工作秘密 商业秘密 个人隐私"
+        "什么是密品？" → "密品 定义 设备产品 国家秘密信息"
+    """
+    prompt = f"""将以下问题改写为适合向量检索的关键词形式。
+要求：
+1. 提取核心概念和关键词
+2. 补充同义词和相关术语
+3. 保留否定词（如"不得""禁止"）
+4. 用空格连接，不要输出其他内容
+
+问题：{query}
+
+关键词："""
+
+    try:
+        response = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=[{"role": "user", "content": prompt}],
+            stream=False,
+            max_tokens=100
+        )
+        rewritten = response.choices[0].message.content.strip()
+        return rewritten if rewritten else query
+    except Exception:
+        return query  # 改写失败时回退到原始查询
+
+
+# ==================== 检索功能 ====================
 
 def embed_chunk(chunk: str) -> List[float]:
     """将文本块转换为向量"""
@@ -36,15 +79,16 @@ def embed_chunk(chunk: str) -> List[float]:
     return embedding.tolist()
 
 
-def retrieve(query: str, top_k: int = 5) -> List[dict]:
+def dense_retrieve(query: str, top_k: int = 5) -> List[dict]:
     """
-    从向量数据库中检索相关文档块
-
+    稠密检索（向量检索）：语义匹配
+    
     Returns:
         List[dict]，每个 dict 包含:
         - text: 文档文本
         - doc_id: 条目编号
         - distance: 向量距离（越小越相似）
+        - dense_rank: 在向量检索中的排名
     """
     query_embedding = embed_chunk(query)
     results = chromadb_collection.query(
@@ -54,18 +98,106 @@ def retrieve(query: str, top_k: int = 5) -> List[dict]:
     )
 
     chunks = []
-    for doc, meta, dist in zip(
+    for rank, (doc, meta, dist) in enumerate(zip(
         results['documents'][0],
         results['metadatas'][0],
         results['distances'][0]
-    ):
+    )):
         chunks.append({
             'text': doc,
             'doc_id': meta.get('doc_id', -1) if meta else -1,
-            'distance': dist
+            'distance': dist,
+            'dense_rank': rank
         })
 
     return chunks
+
+
+def bm25_search(query: str, top_k: int = 5) -> List[dict]:
+    """
+    稀疏检索（BM25）：关键词精确匹配
+    
+    Returns:
+        List[dict]，每个 dict 包含:
+        - text: 文档文本
+        - doc_id: 条目编号
+        - bm25_score: BM25 分数（越高越相关）
+        - sparse_rank: 在 BM25 检索中的排名
+    """
+    if _bm25 is None:
+        return []
+
+    tokenized_query = list(jieba.cut(query))
+    scores = _bm25.get_scores(tokenized_query)
+
+    # 取 Top-K
+    ranked_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:top_k]
+
+    chunks = []
+    for rank, idx in enumerate(ranked_indices):
+        chunks.append({
+            'text': _all_docs['documents'][idx],
+            'doc_id': _bm25_doc_ids[idx],
+            'bm25_score': float(scores[idx]),
+            'sparse_rank': rank
+        })
+
+    return chunks
+
+
+def hybrid_retrieve(query: str, top_k: int = 5, rrf_k: int = 60) -> List[dict]:
+    """
+    混合检索：向量检索 + BM25，用 RRF（Reciprocal Rank Fusion）融合
+    
+    RRF 公式: score(d) = Σ 1/(k + rank_i(d))
+    
+    Returns:
+        List[dict]，每个 dict 包含:
+        - text: 文档文本
+        - doc_id: 条目编号
+        - rrf_score: 融合分数（越高越相关）
+    """
+    # 双路检索
+    dense_results = dense_retrieve(query, top_k=top_k)
+    sparse_results = bm25_search(query, top_k=top_k)
+
+    # RRF 融合
+    rrf_scores = {}
+
+    for chunk in dense_results:
+        doc_id = chunk['doc_id']
+        rrf_scores[doc_id] = rrf_scores.get(doc_id, {'chunk': chunk, 'score': 0})
+        rrf_scores[doc_id]['score'] += 1.0 / (rrf_k + chunk['dense_rank'])
+
+    for chunk in sparse_results:
+        doc_id = chunk['doc_id']
+        if doc_id not in rrf_scores:
+            rrf_scores[doc_id] = {'chunk': chunk, 'score': 0}
+        rrf_scores[doc_id]['score'] += 1.0 / (rrf_k + chunk['sparse_rank'])
+
+    # 按融合分数排序
+    merged = sorted(rrf_scores.values(), key=lambda x: x['score'], reverse=True)
+
+    chunks = []
+    for item in merged[:top_k]:
+        chunk = item['chunk']
+        chunk['rrf_score'] = item['score']
+        chunks.append(chunk)
+
+    return chunks
+
+
+def retrieve(query: str, top_k: int = 5) -> List[dict]:
+    """
+    检索入口（默认使用混合检索）
+    
+    Returns:
+        List[dict]，每个 dict 包含:
+        - text: 文档文本
+        - doc_id: 条目编号
+        - distance: 向量距离
+    """
+    return hybrid_retrieve(query, top_k=top_k)
 
 
 def rerank(query: str, retrieved_chunks: List[dict], top_k: int = 3) -> List[dict]:
