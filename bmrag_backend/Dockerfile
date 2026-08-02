@@ -50,7 +50,10 @@ ENV PATH=/root/.local/bin:$PATH \
 # 复制应用代码与语料
 COPY backend.py .
 COPY app.py .
+COPY ingest.py .
+COPY evaluate.py .
 COPY bm.md .
+COPY tests/ ./tests/
 
 # 模型与向量库通过 volume 挂载，不打入镜像
 # 部署时需挂载:

@@ -1,4 +1,5 @@
-from typing import List
+from typing import List, Generator
+import time
 import chromadb
 from sentence_transformers import CrossEncoder, SentenceTransformer
 import os
@@ -35,36 +36,71 @@ def embed_chunk(chunk: str) -> List[float]:
     return embedding.tolist()
 
 
-def retrieve(query: str, top_k: int = 5) -> List[str]:
-    """从向量数据库中检索相关文档块"""
+def retrieve(query: str, top_k: int = 5) -> List[dict]:
+    """
+    从向量数据库中检索相关文档块
+
+    Returns:
+        List[dict]，每个 dict 包含:
+        - text: 文档文本
+        - doc_id: 条目编号
+        - distance: 向量距离（越小越相似）
+    """
     query_embedding = embed_chunk(query)
     results = chromadb_collection.query(
         query_embeddings=[query_embedding],
-        n_results=top_k
+        n_results=top_k,
+        include=['documents', 'metadatas', 'distances']
     )
-    return results['documents'][0]
+
+    chunks = []
+    for doc, meta, dist in zip(
+        results['documents'][0],
+        results['metadatas'][0],
+        results['distances'][0]
+    ):
+        chunks.append({
+            'text': doc,
+            'doc_id': meta.get('doc_id', -1) if meta else -1,
+            'distance': dist
+        })
+
+    return chunks
 
 
-def rerank(query: str, retrieved_chunks: List[str], top_k: int = 3) -> List[str]:
-    """对检索结果进行重排序"""
-    pairs = [(query, chunk) for chunk in retrieved_chunks]
+def rerank(query: str, retrieved_chunks: List[dict], top_k: int = 3) -> List[dict]:
+    """
+    对检索结果进行重排序
+
+    Returns:
+        List[dict]，每个 dict 包含:
+        - text: 文档文本
+        - doc_id: 条目编号
+        - distance: 原始向量距离
+        - rerank_score: 重排序得分（越高越相关）
+    """
+    pairs = [(query, chunk['text']) for chunk in retrieved_chunks]
     scores = cross_encoder.predict(pairs)
 
-    chunk_with_score_list = [(chunk, score) for chunk, score in zip(retrieved_chunks, scores)]
-    chunk_with_score_list.sort(key=lambda pair: pair[1], reverse=True)
+    for chunk, score in zip(retrieved_chunks, scores):
+        chunk['rerank_score'] = float(score)
 
-    return [chunk for chunk, _ in chunk_with_score_list][:top_k]
+    # 按重排序分数降序排列
+    reranked = sorted(retrieved_chunks, key=lambda x: x['rerank_score'], reverse=True)
+    return reranked[:top_k]
 
 
-def generate(query: str, chunks: List[str]) -> str:
+def generate(query: str, chunks: List[dict]) -> str:
     """使用 DeepSeek 生成回答"""
-    chunks_text = '\n\n'.join(chunks)
+    chunks_text = '\n\n'.join(
+        f"[来源: 条目{c['doc_id']}]\n{c['text']}" for c in chunks
+    )
     prompt = f'''请根据用户的问题和下列片段生成准确的回答。
 用户问题：{query}
 相关片段：
 {chunks_text}
 
-请基于上述内容，不要编造信息。'''
+请基于上述内容，不要编造信息。引用时标注来源条目编号。'''
 
     response = client.chat.completions.create(
         model="deepseek-chat",
@@ -78,15 +114,17 @@ def generate(query: str, chunks: List[str]) -> str:
     return response.choices[0].message.content
 
 
-def generate_stream(query: str, chunks: List[str]):
+def generate_stream(query: str, chunks: List[dict]) -> Generator[str, None, None]:
     """使用 DeepSeek 流式生成回答（生成器，逐块产出文本）"""
-    chunks_text = '\n\n'.join(chunks)
+    chunks_text = '\n\n'.join(
+        f"[来源: 条目{c['doc_id']}]\n{c['text']}" for c in chunks
+    )
     prompt = f'''请根据用户的问题和下列片段生成准确的回答。
 用户问题：{query}
 相关片段：
 {chunks_text}
 
-请基于上述内容，不要编造信息。'''
+请基于上述内容，不要编造信息。引用时标注来源条目编号。'''
 
     response = client.chat.completions.create(
         model="deepseek-chat",
@@ -107,28 +145,28 @@ def generate_stream(query: str, chunks: List[str]):
 def ask(query: str, top_k: int = 5, rerank_top_k: int = 3) -> str:
     """
     RAG 问答主函数
-    
+
     Args:
         query: 用户问题
         top_k: 初始检索返回的文档数量（默认 5）
         rerank_top_k: 重排序后返回的文档数量（默认 3）
-    
+
     Returns:
         模型生成的回答
     """
     # 1. 检索相关文档
     retrieved_chunks = retrieve(query, top_k)
-    
+
     # 2. 重排序
     reranked_chunks = rerank(query, retrieved_chunks, rerank_top_k)
-    
+
     # 3. 生成回答
     answer = generate(query, reranked_chunks)
 
     return answer
 
 
-def ask_stream(query: str, top_k: int = 5, rerank_top_k: int = 3):
+def ask_stream(query: str, top_k: int = 5, rerank_top_k: int = 3) -> Generator[str, None, None]:
     """
     RAG 流式问答主函数（生成器）
 
@@ -150,24 +188,62 @@ def ask_stream(query: str, top_k: int = 5, rerank_top_k: int = 3):
     yield from generate_stream(query, reranked_chunks)
 
 
+def ask_with_details(query: str, top_k: int = 5, rerank_top_k: int = 3) -> dict:
+    """
+    RAG 问答主函数（带检索详情，用于评估和前端展示）
+
+    Returns:
+        dict 包含:
+        - answer: 生成的回答
+        - retrieved_chunks: 检索结果列表（含 doc_id, text, distance, rerank_score）
+        - timing: 各阶段耗时 {retrieve_ms, rerank_ms, generate_ms, total_ms}
+    """
+    timing = {}
+
+    # 1. 检索
+    t0 = time.time()
+    retrieved_chunks = retrieve(query, top_k)
+    timing['retrieve_ms'] = round((time.time() - t0) * 1000, 1)
+
+    # 2. 重排序
+    t0 = time.time()
+    reranked_chunks = rerank(query, retrieved_chunks, rerank_top_k)
+    timing['rerank_ms'] = round((time.time() - t0) * 1000, 1)
+
+    # 3. 生成
+    t0 = time.time()
+    answer = generate(query, reranked_chunks)
+    timing['generate_ms'] = round((time.time() - t0) * 1000, 1)
+    timing['total_ms'] = round(
+        timing['retrieve_ms'] + timing['rerank_ms'] + timing['generate_ms'], 1
+    )
+
+    return {
+        'query': query,
+        'answer': answer,
+        'retrieved_chunks': reranked_chunks,
+        'timing': timing
+    }
+
+
 # ==================== 使用示例 ====================
 
 if __name__ == "__main__":
-    # 测试查询
-    # query = "可以用手机拍摄保密信息吗？"
-    # answer = ask(query)
-    # print(answer)
-    
-    #连续问答示例
     questions = [
         "国家秘密的密级分为哪几级？",
         "个人隐私可以确定为国家秘密吗？",
         "非密品是否需要作出秘密标识？"
     ]
-    
+
     for q in questions:
         print(f"\n{'='*50}")
         print(f"问题: {q}")
         print(f"{'='*50}")
-        answer = ask(q)
-        print(f"回答: {answer}\n")
+        result = ask_with_details(q)
+        print(f"回答: {result['answer']}\n")
+        print(f"检索详情:")
+        for chunk in result['retrieved_chunks']:
+            print(f"  [条目 {chunk['doc_id']}] "
+                  f"distance={chunk['distance']:.4f} "
+                  f"rerank={chunk['rerank_score']:.4f}")
+        print(f"耗时: {result['timing']}")

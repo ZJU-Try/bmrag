@@ -1,0 +1,242 @@
+[
+  {
+    "id": 1,
+    "question": "国家秘密的密级分为哪几级？",
+    "answer": "国家秘密的密级分为绝密、机密、秘密三级。绝密级是最重要的国家秘密，泄露会使国家安全和利益遭受特别严重的损害；机密级是重要的国家秘密，泄露会遭受严重的损害；秘密级是一般的国家秘密，泄露会遭受损害。",
+    "relevant_doc_ids": [3, 4],
+    "category": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "id": 2,
+    "question": "哪些事项不得确定为国家秘密？",
+    "answer": "下列事项不得确定为国家秘密：（1）需要社会公众广泛知晓或者参与的；（2）属于工作秘密、商业秘密、个人隐私的；（3）已经依法公开或者无法控制知悉范围的；（4）法律、法规或者国家有关规定要求公开的。",
+    "relevant_doc_ids": [5],
+    "category": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "id": 3,
+    "question": "什么是定密？定密包括哪两种类型？",
+    "answer": "定密是指单位依法确定、变更和解除国家秘密的活动。定密包括原始定密和派生定密两种类型。",
+    "relevant_doc_ids": [5],
+    "category": "conceptual",
+    "difficulty": "easy"
+  },
+  {
+    "id": 4,
+    "question": "定密应当坚持什么原则？",
+    "answer": "定密应当坚持最小化、精准化原则。",
+    "relevant_doc_ids": [6],
+    "category": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "id": 5,
+    "question": "国家秘密的保密期限上限分别是多少年？",
+    "answer": "除另有规定外，绝密级不超过30年，机密级不超过20年，秘密级不超过10年。",
+    "relevant_doc_ids": [13],
+    "category": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "id": 6,
+    "question": "确定国家秘密的基本程序是什么？",
+    "answer": "承办人对照本单位制定的国家秘密事项一览表或者其他定密依据，提出拟定密级、保密期限和知悉范围的意见，提交所在部门负责人审核后由单位定密责任人审批。",
+    "relevant_doc_ids": [10],
+    "category": "factual",
+    "difficulty": "medium"
+  },
+  {
+    "id": 7,
+    "question": "什么是派生定密？",
+    "answer": "派生定密是指机关、单位对执行或者办理已定密事项所产生的国家秘密，依法确定、变更和解除的活动。",
+    "relevant_doc_ids": [22],
+    "category": "conceptual",
+    "difficulty": "medium"
+  },
+  {
+    "id": 8,
+    "question": "派生国家秘密的密级应当如何确定？",
+    "answer": "派生国家秘密的密级应当与已定密事项密级保持一致。已定密事项明确密点及其密级的，应当与所涉及密点的最高密级保持一致。",
+    "relevant_doc_ids": [24],
+    "category": "factual",
+    "difficulty": "medium"
+  },
+  {
+    "id": 9,
+    "question": "国家秘密的知悉范围应当如何限定？",
+    "answer": "国家秘密的知悉范围应当根据工作需要限定在最小范围。能够限定到具体人员的，限定到具体人员；不能限定到具体人员的，限定到机关、单位，由该机关、单位限定到具体人员。",
+    "relevant_doc_ids": [18, 19],
+    "category": "factual",
+    "difficulty": "medium"
+  },
+  {
+    "id": 10,
+    "question": "国家秘密载体包括哪些类型的介质？",
+    "answer": "国家秘密载体是指以文字、数据、符号、图形、图像、视频、音频、程序软件等方式记载国家秘密信息的纸介质、光介质、磁介质、半导体介质等各类物品。",
+    "relevant_doc_ids": [27],
+    "category": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "id": 11,
+    "question": "国家秘密标志的形式有哪几种？",
+    "answer": "国家秘密标志形式为\"密级⭐保密期限\"\"密级⭐解密时间\"\"密级⭐解密条件\"三种形式。",
+    "relevant_doc_ids": [29],
+    "category": "factual",
+    "difficulty": "medium"
+  },
+  {
+    "id": 12,
+    "question": "传递国家秘密载体可以通过哪些方式？哪些方式是禁止的？",
+    "answer": "传递国家秘密载体应当通过机要交通、机要通信或者其他符合国家保密规定的方式进行。指派专人传递的，应当选择安全的交通工具和交通路线，并采取相应的安全保密措施。不得通过普通邮政或者快递等其他无保密措施的渠道传递。",
+    "relevant_doc_ids": [38],
+    "category": "factual",
+    "difficulty": "medium"
+  },
+  {
+    "id": 13,
+    "question": "收发国家秘密载体需要履行哪些手续？",
+    "answer": "收发国家秘密载体应当履行清点、编号、登记、签收等手续。",
+    "relevant_doc_ids": [37],
+    "category": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "id": 14,
+    "question": "阅读和使用国家秘密载体有什么要求？",
+    "answer": "阅读和使用国家秘密载体应当办理登记、签收手续，管理人员要随时掌握国家秘密载体的去向。应当在符合保密要求的办公场所进行；确需在办公场所以外阅读使用的，应当遵守有关保密规定。",
+    "relevant_doc_ids": [40, 41],
+    "category": "factual",
+    "difficulty": "medium"
+  },
+  {
+    "id": 15,
+    "question": "什么是密品？",
+    "answer": "密品是直接含有国家秘密信息或者通过观察、测试、分析等手段能够获取所承载的国家秘密信息的设备和产品。",
+    "relevant_doc_ids": [50],
+    "category": "conceptual",
+    "difficulty": "medium"
+  },
+  {
+    "id": 16,
+    "question": "涉密信息设备的涉密等级如何确定？",
+    "answer": "涉密信息设备原则上根据存储、处理、传输信息的最高密级按照程序确定、变更和调整涉密等级和责任人。",
+    "relevant_doc_ids": [59],
+    "category": "factual",
+    "difficulty": "medium"
+  },
+  {
+    "id": 17,
+    "question": "涉密信息设备携带外出需要履行什么程序？",
+    "answer": "涉密信息设备携带外出前应当履行审批程序，借出前和归还后应当进行保密检查，外出期间应当按照国家保密标准管理和使用。",
+    "relevant_doc_ids": [61],
+    "category": "factual",
+    "difficulty": "medium"
+  },
+  {
+    "id": 18,
+    "question": "什么是保密要害部门？什么保密要害部位？",
+    "answer": "保密要害部门是指涉及绝密级或者较多机密级、秘密级国家秘密的内设机构。保密要害部位是指集中制作、存放、保管国家秘密载体、密品的专门场所。",
+    "relevant_doc_ids": [76, 77],
+    "category": "conceptual",
+    "difficulty": "medium"
+  },
+  {
+    "id": 19,
+    "question": "哪些便携电子设备禁止带入保密要害部门部位？",
+    "answer": "严禁将普通手机、平板电脑、智能手表、智能手环、智能眼镜等便携电子设备带入保密要害部门部位，并应当设置显著的禁止带入标志。确因工作需要带入安全保密专用便携电子设备的，应当按照规定审批，并登记备案。",
+    "relevant_doc_ids": [80],
+    "category": "factual",
+    "difficulty": "medium"
+  },
+  {
+    "id": 20,
+    "question": "涉密会议的保密要求有哪些？",
+    "answer": "举办涉密会议应当根据会议内容确定密级，使用的场所符合规定，设施设备符合国家保密标准，采取必要保密技术防护等措施。应当限定参加人员和工作人员范围，对人员进行身份核实和保密教育，提出具体保密要求。国家秘密载体的发放、清退、保管和销毁应当指定人员负责，按照规定履行审批登记手续。",
+    "relevant_doc_ids": [71, 72, 73],
+    "category": "factual",
+    "difficulty": "hard"
+  },
+  {
+    "id": 21,
+    "question": "在岗涉密人员每年的保密教育培训时间要求是多少？",
+    "answer": "应当对在岗涉密人员进行保密教育培训，每人每年度不少于16学时。",
+    "relevant_doc_ids": [89],
+    "category": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "id": 22,
+    "question": "涉密人员出境需要履行什么程序？",
+    "answer": "涉密人员出境应当履行审批程序，出境前应当接受保密教育，返回后及时收回证件并回访。",
+    "relevant_doc_ids": [91],
+    "category": "factual",
+    "difficulty": "medium"
+  },
+  {
+    "id": 23,
+    "question": "涉密人员离职离岗前需要办理哪些手续？",
+    "answer": "涉密人员离职离岗前应当按照规定经过审批，接受保密提醒谈话，签订保密承诺书，清退保管和使用的国家秘密载体、工作秘密（敏感信息）载体、涉密信息设备和密品，取消涉密信息系统访问权限。",
+    "relevant_doc_ids": [93],
+    "category": "factual",
+    "difficulty": "hard"
+  },
+  {
+    "id": 24,
+    "question": "不同级别涉密人员的脱密期分别不少于多少年？",
+    "answer": "核心涉密人员脱密期不少于3年，重要涉密人员脱密期不少于2年，一般涉密人员脱密期不少于1年。脱密期自批准涉密人员离职离岗之日起计算。",
+    "relevant_doc_ids": [95],
+    "category": "factual",
+    "difficulty": "medium"
+  },
+  {
+    "id": 25,
+    "question": "涉密人员在脱密期内有哪些限制？",
+    "answer": "涉密人员在脱密期内不得到境外（驻华）机构（含咨询机构组织）或者外商独资企业工作；不得为境外（驻华）机构（含咨询机构组织）、人员或者外商独资企业提供劳务、咨询或者其他服务；未经批准不得擅自出境。应当定期向原机关、单位组织人事部门报告就业变更、个人重大事项等情况。",
+    "relevant_doc_ids": [96, 97, 98],
+    "category": "factual",
+    "difficulty": "hard"
+  },
+  {
+    "id": 26,
+    "question": "单位对拟公开的信息应当如何处理？",
+    "answer": "单位应当依法对拟公开的信息进行保密审查，遵守国家保密规定。拟公开发布的信息通过保密审查审批后，不得对内容进行修改，确需修改的应当重新进行保密审查审批。拟公开发布的信息在公开发布前应当去除修改痕迹。",
+    "relevant_doc_ids": [65, 66],
+    "category": "factual",
+    "difficulty": "medium"
+  },
+  {
+    "id": 27,
+    "question": "与协作配套单位签订涉密项目合同中应当明确哪些内容？",
+    "answer": "应当明确合同文本密级、项目密级、密点、保密期限、知悉范围、甲乙双方的保密管理要求、责任义务和违约罚则。",
+    "relevant_doc_ids": [84],
+    "category": "factual",
+    "difficulty": "medium"
+  },
+  {
+    "id": 28,
+    "question": "销毁国家秘密载体有什么要求？",
+    "answer": "销毁国家秘密载体应当符合国家保密规定和标准，确保销毁的国家秘密信息无法还原；应当履行清点、登记、审批手续并送交保密行政管理部门设立的工作机构或者指定的单位销毁。单位因工作需要自行销毁少量国家秘密载体的，应当使用符合国家保密标准的销毁设备和方法。",
+    "relevant_doc_ids": [48],
+    "category": "factual",
+    "difficulty": "medium"
+  },
+  {
+    "id": 29,
+    "question": "复制国家秘密载体有什么要求？绝密级有什么特殊规定？",
+    "answer": "复制国家秘密载体或者摘录、引用、汇编属于国家秘密的内容，应当按照规定报批，不得擅自改变原件的密级、保密期限和知悉范围，复制件应当加盖复制机关、单位戳记，并视同原件进行管理。绝密级国家秘密载体未经原定密机关、单位或者其上级机关批准，不得复制、汇编和摘抄。",
+    "relevant_doc_ids": [43, 44],
+    "category": "factual",
+    "difficulty": "hard"
+  },
+  {
+    "id": 30,
+    "question": "为境外机构非法提供国家秘密的，刑法如何处罚？",
+    "answer": "根据刑法第一百一十一条，为境外的机构、组织、人员窃取、刺探、收买、非法提供国家秘密或者情报的，处五年以上十年以下有期徒刑；情节特别严重的，处十年以上有期徒刑或者无期徒刑；情节较轻的，处五年以下有期徒刑、拘役、管制或者剥夺政治权利。",
+    "relevant_doc_ids": [101],
+    "category": "factual",
+    "difficulty": "hard"
+  }
+]
